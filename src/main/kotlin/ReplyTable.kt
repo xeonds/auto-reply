@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class DataTable(@SerialName("rule") val rule: List<Rule>) {
     @Serializable
     data class Rule(
-        @SerialName("keyword") val keyword: String,
-        @SerialName("name") val rule: String
+        @SerialName("mode") val mode: String,
+        @SerialName("word") val word: String,
+        @SerialName("reply") val reply: String
     )
 }

@@ -28,7 +28,7 @@ object PluginMain : KotlinPlugin(
         eventChannel.subscribeAlways<GroupMessageEvent> {
             when (val res = messageHandler(message)) {
                 "" -> {}
-                else -> sender.sendMessage(res)
+                else -> group.sendMessage(res)
             }
             return@subscribeAlways
         }
