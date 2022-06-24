@@ -24,6 +24,9 @@ fun messageHandler(msg: MessageChain): String {
                 }
                 //TODO：关键词列表：使用分号分割一列关键词，同时包含所有关键词则回复
                 "contain" -> return rule.reply
+                "equal"-> if (rule.word==msg.contentToString()){
+                    return rule.reply
+                }
                 //TODO：变量：可以在回复中使用一些预定义变量，比如时间、自定义常量，原消息等，尝试支持正则
                 //TODO：时间触发模式：发消息时如果在某一个时间区间内则回复
                 //TODO：规则功能列表：可以将多种条件组合使用，达到灵活回复的效果
@@ -41,6 +44,8 @@ fun messageHandler(msg: MessageChain): String {
 @OptIn(ExperimentalSerializationApi::class)
 fun loadWordTable(): DataTable {
     val repTable = PluginMain.resolveDataFile(PluginMain.dataFolder.absolutePath + "/reply-table-v1.json")
-
+    if (!repTable.exists()) {
+        repTable.writeText("{\"rule\":[]}")
+    }
     return Json.decodeFromString(repTable.readText())
 }
