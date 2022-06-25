@@ -1,5 +1,9 @@
 package xyz.xeonds.mirai.autoreply
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.GlobalEventChannel
@@ -21,6 +25,7 @@ object PluginMain : KotlinPlugin(
         )
     }
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     override fun onEnable() {
         logger.info { "Auto-reply loaded" }
         //配置文件目录 "${dataFolder.absolutePath}/"
@@ -33,6 +38,28 @@ object PluginMain : KotlinPlugin(
             return@subscribeAlways
         }
         eventChannel.subscribeAlways<FriendMessageEvent> {
+            val table = loadWordTable()
+
+            if (sender.id in table.admin && message.contentToString().startsWith("--")) {
+                val res = message.contentToString().split("\n")[0].split(" ")
+                when (res[0]) {
+                    "--add-rule" -> {
+                        table.rule.add(0, DataTable.Rule(res[1], res[2], res[3]))
+                        saveWordTable(table)
+                        sender.sendMessage("已添加回复规则")
+                    }
+                    "--import-config" -> {
+                        val config = message.contentToString().split("\n", limit = 2)[1]
+
+                        saveWordTable(Json.decodeFromString(config))
+                        sender.sendMessage("已装载配置文件")
+                    }
+                    "--export-config" -> {
+                        sender.sendMessage(Json.encodeToString(table))
+                    }
+                }
+                return@subscribeAlways
+            }
             when (val res = messageHandler(message)) {
                 "" -> {}
                 else -> sender.sendMessage(res)

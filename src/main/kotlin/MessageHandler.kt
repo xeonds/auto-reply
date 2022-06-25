@@ -2,12 +2,12 @@ package xyz.xeonds.mirai.autoreply
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.mamoe.mirai.message.data.MessageChain
 
 fun messageHandler(msg: MessageChain): String {
     val table = loadWordTable()
-
     //关键字回复功能
     table.rule.forEach { rule ->
         if (rule.word in msg.contentToString()) {
@@ -24,7 +24,7 @@ fun messageHandler(msg: MessageChain): String {
                 }
                 //TODO：关键词列表：使用分号分割一列关键词，同时包含所有关键词则回复
                 "contain" -> return rule.reply
-                "equal"-> if (rule.word==msg.contentToString()){
+                "equal" -> if (rule.word == msg.contentToString()) {
                     return rule.reply
                 }
                 //TODO：变量：可以在回复中使用一些预定义变量，比如时间、自定义常量，原消息等，尝试支持正则
@@ -45,7 +45,14 @@ fun messageHandler(msg: MessageChain): String {
 fun loadWordTable(): DataTable {
     val repTable = PluginMain.resolveDataFile(PluginMain.dataFolder.absolutePath + "/reply-table-v1.json")
     if (!repTable.exists()) {
-        repTable.writeText("{\"rule\":[]}")
+        repTable.writeText("{\"rule\":[],\"admin\":[]}")
     }
     return Json.decodeFromString(repTable.readText())
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+fun saveWordTable(table: DataTable) {
+    val repTable = PluginMain.resolveDataFile(PluginMain.dataFolder.absolutePath + "/reply-table-v1.json")
+
+    repTable.writeText(Json.encodeToString(table))
 }
