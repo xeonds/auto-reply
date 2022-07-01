@@ -6,38 +6,28 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.mamoe.mirai.message.data.MessageChain
 
-fun messageHandler(msg: MessageChain): String {
+fun messageHandler(msg: MessageChain, id: Long): String {
     val table = loadWordTable()
-    //关键字回复功能
     table.rule.forEach { rule ->
-        if (rule.word in msg.contentToString()) {
-            when (rule.mode) {
-                "start-with" -> {
-                    if (msg.contentToString().startsWith(rule.word)) {
-                        return rule.reply
-                    }
-                }
-                "end-with" -> {
-                    if (msg.contentToString().endsWith(rule.word)) {
-                        return rule.reply
-                    }
-                }
-                //TODO：关键词列表：使用分号分割一列关键词，同时包含所有关键词则回复
-                "contain" -> return rule.reply
-                "equal" -> if (rule.word == msg.contentToString()) {
-                    return rule.reply
-                }
-                //TODO：变量：可以在回复中使用一些预定义变量，比如时间、自定义常量，原消息等，尝试支持正则
-                //TODO：时间触发模式：发消息时如果在某一个时间区间内则回复
-                //TODO：规则功能列表：可以将多种条件组合使用，达到灵活回复的效果
-                //TODO：被at：当被at时回复一些内容
-                //TODO：被戳：被戳时回复一些内容
-            }
+        when (rule.mode) {
+            "start-with" -> if (msg.contentToString().startsWith(rule.word)) return rule.reply
+            "end-with" -> if (msg.contentToString().endsWith(rule.word)) return rule.reply
+            //TODO：关键词列表：使用分号分割一列关键词，同时包含所有关键词则回复
+            "contain" -> if (rule.word in msg.contentToString()) return rule.reply
+            "equal" -> if (rule.word == msg.contentToString()) return rule.reply
+            //TODO：变量：可以在回复中使用一些预定义变量，比如时间、自定义常量，原消息等，尝试支持正则
+            //TODO：时间触发模式：发消息时如果在某一个时间区间内则回复
+            //TODO：规则功能列表：可以将多种条件组合使用，达到灵活回复的效果
+            //TODO：被at：当被at时回复一些内容
+            //TODO：被戳：被戳时回复一些内容
+            "repeat" ->
+                //仅当群/用户id为预设id时复读
+                if (rule.reply.toLong() == id && Repeater.execute(
+                        msg.contentToString(), rule.word.toInt(), id    //复读内容以及触发复读次数
+                    )
+                ) return msg.contentToString()
         }
     }
-    //TODO：关键词添加功能。特定账号私聊机器人会进入关键词添加模式
-    //TODO：规则文件导出导入功能
-    //TODO：其他功能开关，例如复读机等
     return ""
 }
 
@@ -55,4 +45,23 @@ fun saveWordTable(table: DataTable) {
     val repTable = PluginMain.resolveDataFile(PluginMain.dataFolder.absolutePath + "/reply-table-v1.json")
 
     repTable.writeText(Json.encodeToString(table))
+}
+
+/**
+ * Repeater:实现自动回复的单例类
+ */
+object Repeater {
+    private var counter = mutableMapOf<Long, Int>()
+    private var sentence = mutableMapOf<Long, String>()
+
+    fun execute(msg: String, cnt: Int, id: Long): Boolean {
+        if (msg == sentence[id]) {
+            counter[id] = counter[id]!! + 1
+            return cnt == counter[id]
+        } else {
+            counter[id] = 1
+            sentence[id] = msg
+        }
+        return false
+    }
 }

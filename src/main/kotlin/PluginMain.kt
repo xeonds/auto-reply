@@ -11,27 +11,22 @@ import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.utils.info
 
-object PluginMain : KotlinPlugin(
-    JvmPluginDescription(
-        id = "xyz.xeonds.mirai.autoreply",
-        name = "自动回复插件",
-        version = "0.1.0"
-    ) {
-        author("xeonds@stu.xidian.edu.cn")
-        info(
-            """
+object PluginMain : KotlinPlugin(JvmPluginDescription(
+    id = "xyz.xeonds.mirai.autoreply", name = "自动回复插件", version = "0.1.0"
+) {
+    author("xeonds@stu.xidian.edu.cn")
+    info(
+        """
             根据关键词自动触发回复。详情见Readme文档
         """.trimIndent()
-        )
-    }
-) {
+    )
+}) {
     @OptIn(ExperimentalSerializationApi::class)
     override fun onEnable() {
-        logger.info { "Auto-reply loaded" }
-        //配置文件目录 "${dataFolder.absolutePath}/"
+        logger.info { "Auto-reply 已加载" }
         val eventChannel = GlobalEventChannel.parentScope(this)
         eventChannel.subscribeAlways<GroupMessageEvent> {
-            when (val res = messageHandler(message)) {
+            when (val res = messageHandler(message, group.id)) {
                 "" -> {}
                 else -> group.sendMessage(res)
             }
@@ -50,7 +45,6 @@ object PluginMain : KotlinPlugin(
                     }
                     "--import-config" -> {
                         val config = message.contentToString().split("\n", limit = 2)[1]
-
                         saveWordTable(Json.decodeFromString(config))
                         sender.sendMessage("已装载配置文件")
                     }
@@ -58,9 +52,8 @@ object PluginMain : KotlinPlugin(
                         sender.sendMessage(Json.encodeToString(table))
                     }
                 }
-                return@subscribeAlways
             }
-            when (val res = messageHandler(message)) {
+            when (val res = messageHandler(message, friend.id)) {
                 "" -> {}
                 else -> sender.sendMessage(res)
             }
@@ -69,6 +62,6 @@ object PluginMain : KotlinPlugin(
     }
 
     override fun onDisable() {
-        logger.info { "Auto-reply unloaded." }
+        logger.info { "Auto-reply 已卸载" }
     }
 }
