@@ -9,6 +9,7 @@ import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.event.GlobalEventChannel
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.utils.info
 
 object PluginMain : KotlinPlugin(JvmPluginDescription(
@@ -28,7 +29,7 @@ object PluginMain : KotlinPlugin(JvmPluginDescription(
         eventChannel.subscribeAlways<GroupMessageEvent> {
             when (val res = messageHandler(message, group.id)) {
                 "" -> {}
-                else -> group.sendMessage(res)
+                else -> group.sendMessage(res.deserializeMiraiCode())
             }
             return@subscribeAlways
         }
@@ -55,7 +56,7 @@ object PluginMain : KotlinPlugin(JvmPluginDescription(
             }
             when (val res = messageHandler(message, friend.id)) {
                 "" -> {}
-                else -> sender.sendMessage(res)
+                else -> sender.sendMessage(res.deserializeMiraiCode())
             }
             return@subscribeAlways
         }

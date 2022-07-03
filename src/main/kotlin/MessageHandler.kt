@@ -23,9 +23,9 @@ fun messageHandler(msg: MessageChain, id: Long): String {
             "repeat" ->
                 //仅当群/用户id为预设id时复读
                 if (rule.reply.toLong() == id && Repeater.execute(
-                        msg.contentToString(), rule.word.toInt(), id    //复读内容以及触发复读次数
+                        msg.serializeToMiraiCode(), rule.word.toInt(), id    //复读内容以及触发复读次数
                     )
-                ) return msg.contentToString()
+                ) return msg.serializeToMiraiCode()
         }
     }
     return ""
